@@ -6,7 +6,11 @@
         <div class="col-md-4 offset-md-4">
             <div class="card">
                 <div class="card-body">
-                    <form @submit.prevent="handleSubmit()">
+                    <div v-if="successMsg" class="alert alert-success" role="alert">
+                        {{ successMsg }}
+                    </div>
+
+                    <form @submit.prevent="handleSubmit()" ref="formEl">
                         <div class="mb-3">
                             <label for="exampleFormControlInput1" class="form-label">Dish name</label>
                             <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Margarita Pizza" v-model="formData.name">
@@ -60,6 +64,20 @@
                             </div>
                         </div>
                         <div class="mb-3">
+                            <label for="exampleFormControlInput3" class="form-label">Dish image</label>
+                            <select class="form-select" aria-label="Default select available" id="exampleFormControlInput3" v-model="formData.img">
+                                <option selected>Open this select menu</option>
+                                <option value="pizza">Pizza</option>
+                                <option value="burger">Burger</option>
+                                <option value="muffin">Muffin</option>
+                                <option value="beer">Beer</option>
+                            </select>
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.img.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label for="exampleFormControlInput4" class="form-label">Dish time to prepare</label>
                             <input type="text" class="form-control" id="exampleFormControlInput4" placeholder="ETA 30min" v-model="formData.eta">
                             <!-- Error Message -->
@@ -85,21 +103,27 @@
 <script setup>
 import { useVuelidate } from '@vuelidate/core'
 import { required, minLength, maxLength } from '@vuelidate/validators'
-import { reactive, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ApiService from "@/services/ApiService"
 
-const formData = reactive({
+const initialFormData = () => ({
     name: '',
     description: '',
     price: '',
     category: '',
     available: '',
     eta: '',
+    img: '',
     active: false
-}),
+})
+
+const formData = reactive(initialFormData()),
+    resetUserForm = () => Object.assign(formData, initialFormData()),
     route = useRoute(),
-    router = useRouter()
+    router = useRouter(),
+    successMsg = ref(''),
+    formEl = ref(null)
 
 // Validation of the form fields
 const rules = computed(() => {
@@ -109,7 +133,8 @@ const rules = computed(() => {
         price: { required, minLength: minLength(1), maxLength: maxLength(20) },
         category: { required },
         available: { required },
-        eta: { required,minLength: minLength(2), maxLength: maxLength(20) }
+        eta: { required,minLength: minLength(2), maxLength: maxLength(20) },
+        img: { required }
     }
 })
 
@@ -124,19 +149,21 @@ const isEditMode = computed(() => {
 // Functions
 
 // Function for handlig form and sending data to API
-const handleSubmit = async () => {
+const handleSubmit = async (event) => {
     const result = await v$.value.$validate()
 
-    console.log('result ', result)
     if (result) {
         await ApiService.createOrUpdateDishes(formData)
+        resetUserForm()
+        successMsg.value = isEditMode ? 'Menu item created.' : 'Menu item edited.'
     }
 }
 
 const getSingleDishesData = async () => {
     if (isEditMode.value) {
         let singleDish = await ApiService.getSingleDishes(route.params.id)
-        formData.value = singleDish.data.data
+        //formData = singleDish.data.data
+        Object.assign(formData, singleDish.data.data)
     }
 }
 

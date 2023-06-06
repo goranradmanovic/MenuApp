@@ -4,7 +4,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="my-3">Menu Items</h1>
 
-                <button type="button" class="btn btn-warning clear-btn" @click="clearMenu()">Clear Menu</button>
+                <button v-if="dishes.data.data.length" type="button" class="btn btn-warning clear-btn" @click="clearMenu()">Clear Menu</button>
             </div>
         </div>
         <div class="col-md-6 offset-md-3">
@@ -13,10 +13,10 @@
                     <div class="card mb-3">
                         <div class="row g-0">
                             <div class="col-md-4">
-                                <img src="https://placehold.co/500x500?text=Food+Placeholder+Photo" class="img-fluid rounded-start m-2" alt="Food image">
+                                <img :src="getImageUrl(item.img)" class="img-fluid rounded-start m-2" alt="Food image">
                             </div>
                             <div class="col-md-8">
-                                <div class="card-body">
+                                <div class="card-body ms-2">
                                     <h4 class="card-title">
                                         <router-link :to="`/menu/${item._id}`" class="card-title-link">{{ item.name }}</router-link>
                                     </h4>
@@ -70,6 +70,9 @@ const clearMenu = async () => {
     }
 }
 
+const getImageUrl = (imgName) => {
+    return new URL(`/src/assets/img/${imgName}.svg`, import.meta.url).href;
+}
 </script>
 
 <style scoped>
