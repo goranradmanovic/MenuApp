@@ -1,7 +1,11 @@
 <template>
     <div class="row">
         <div class="col-md-12">
-            <h1 class="my-3">Menu Items</h1>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="my-3">Menu Items</h1>
+
+                <button type="button" class="btn btn-warning clear-btn" @click="clearMenu()">Clear Menu</button>
+            </div>
         </div>
         <div class="col-md-6 offset-md-3">
             <ul v-if="isDishes" class="list-group list-group-flush">
@@ -51,11 +55,21 @@ import { ref, computed } from 'vue'
 const dishes = ref(null)
 
 dishes.value = await ApiService.getAllDishes()
-console.log('DISH ', dishes.value.data.data.length)
+
 // a computed ref
 const isDishes = computed(() => {
-  return  dishes.value.status === 200 && dishes.value.data.data.length > 0
+  return dishes.value.status === 200 && dishes.value.data.data.length > 0
 })
+
+// Clear menu items
+const clearMenu = async () => {
+    let res = await ApiService.clearAllDishes()
+
+    if (res.status === 'OK') {
+        dishes.value = null
+    }
+}
+
 </script>
 
 <style scoped>
