@@ -10,14 +10,26 @@
                         <div class="mb-3">
                             <label for="exampleFormControlInput1" class="form-label">Dish name</label>
                             <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Margarita Pizza" v-model="formData.name">
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.name.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlTextarea1" class="form-label">Dish Description</label>
                             <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" placeholder="Simple dish description ..." v-model="formData.description"></textarea>
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.description.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlInput6" class="form-label">Dish price</label>
                             <input type="text" class="form-control" id="exampleFormControlInput6" placeholder="Dish price in $" v-model="formData.price">
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.price.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlInput2" class="form-label">Dish category</label>
@@ -28,6 +40,10 @@
                                 <option value="dessert">Dessert</option>
                                 <option value="beverage">Beverage</option>
                             </select>
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.category.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlInput3" class="form-label">Dish avialibility</label>
@@ -38,10 +54,18 @@
                                 <option value="lunch">Lunch</option>
                                 <option value="weekdays">Weekdays</option>
                             </select>
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.available.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlInput4" class="form-label">Dish time to prepare</label>
                             <input type="text" class="form-control" id="exampleFormControlInput4" placeholder="ETA 30min" v-model="formData.eta">
+                            <!-- Error Message -->
+                            <div class="input-errors" v-for="(error, index) of v$.eta.$errors" :key="index">
+                                <div class="text-danger">{{ error.$message }}</div>
+                            </div>
                         </div>
                         <div class="mb-3 d-flex align-items-center">
                             <input class="form-check-input mt-0" type="checkbox" value="" id="exampleFormControlInput5" v-model="formData.active">
@@ -59,11 +83,13 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required, minLength, maxLength } from '@vuelidate/validators'
+import { reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ApiService from "@/services/ApiService"
 
-const formData = ref({
+const formData = reactive({
     name: '',
     description: '',
     price: '',
@@ -75,6 +101,22 @@ const formData = ref({
     route = useRoute(),
     router = useRouter()
 
+// Validation of the form fields
+const rules = computed(() => {
+    return {
+        name: { required, minLength: minLength(5), maxLength: maxLength(20) },
+        description: { required, minLength: minLength(5), maxLength: maxLength(200)},
+        price: { required, minLength: minLength(1), maxLength: maxLength(20) },
+        category: { required },
+        available: { required },
+        eta: { required,minLength: minLength(2), maxLength: maxLength(20) }
+    }
+})
+
+const v$ = useVuelidate(rules, formData)
+
+
+// If we have ID we are able to edit
 const isEditMode = computed(() => {
   return route.params.id !== undefined
 })
@@ -83,7 +125,12 @@ const isEditMode = computed(() => {
 
 // Function for handlig form and sending data to API
 const handleSubmit = async () => {
-    await ApiService.createOrUpdateDishes(formData.value)
+    const result = await v$.value.$validate()
+
+    console.log('result ', result)
+    if (result) {
+        await ApiService.createOrUpdateDishes(formData)
+    }
 }
 
 const getSingleDishesData = async () => {
@@ -99,7 +146,6 @@ const deleteSingleDishItem = async () => {
     if (res.message === 'Dish deleted' && res.status === 'OK') {
         router.push({ name: 'home' });
     }
-
 }
 
 // Invocing functions
