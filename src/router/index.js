@@ -16,7 +16,7 @@ const router = createRouter({
     },
     {
       path: '/menu/:id',
-      name: 'menu',
+      name: 'singleDish',
       component: () => import('../views/MenuView.vue')
     },
   ]
