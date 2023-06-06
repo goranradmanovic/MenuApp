@@ -48,7 +48,8 @@
                             <label for="exampleFormControlInput5" class="form-label ms-3 mb-0">Deactivate Dish</label>
                         </div>
                         <div class="mb-3">
-                            <button type="submit" class="btn btn-primary">Add</button>
+                            <button type="submit" class="btn btn-primary">{{ isEditMode ? 'Edit': 'Add' }}</button>
+                            <button v-if="isEditMode" @click="deleteSingleDishItem()" type="button" class="btn btn-danger ms-3">Delete</button>
                         </div>
                     </form>
                 </div>
@@ -58,7 +59,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import ApiService from "@/services/ApiService"
 
 const formData = ref({
@@ -69,12 +71,38 @@ const formData = ref({
     available: '',
     eta: '',
     active: false
+}),
+    route = useRoute(),
+    router = useRouter()
+
+const isEditMode = computed(() => {
+  return route.params.id !== undefined
 })
 
+// Functions
 
 // Function for handlig form and sending data to API
 const handleSubmit = async () => {
     await ApiService.createOrUpdateDishes(formData.value)
 }
+
+const getSingleDishesData = async () => {
+    if (isEditMode.value) {
+        let singleDish = await ApiService.getSingleDishes(route.params.id)
+        formData.value = singleDish.data.data
+    }
+}
+
+const deleteSingleDishItem = async () => {
+    let res = await ApiService.deleteSingleDishes(route.params.id)
+
+    if (res.message === 'Dish deleted' && res.status === 'OK') {
+        router.push({ name: 'home' });
+    }
+
+}
+
+// Invocing functions
+getSingleDishesData()
 
 </script>
