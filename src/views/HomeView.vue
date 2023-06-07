@@ -62,9 +62,7 @@ const isDishes = computed(() => {
 // Clear menu items
 const clearMenu = async () => {
     let res = await ApiService.clearAllDishes()
-    console.log(res.status)
     if (res.status === 200) {
-        console.log('in', res)
         dishes.value = []
     }
 }
@@ -75,7 +73,9 @@ const getImageUrl = (imgName) => {
 
 const getAllMenuItems = async () => {
     let res = await ApiService.getAllDishes()
-    dishes.value = res.data.data
+    if (res.status === 200) {
+        dishes.value = res.data.data
+    }
 }
 
 getAllMenuItems()

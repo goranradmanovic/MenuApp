@@ -150,10 +150,12 @@ const handleSubmit = async (event) => {
     let result = await v$.value.$validate()
 
     if (result) {
-        await ApiService.createOrUpdateDishes(formData)
-        resetUserForm()
-        v$.value.$reset()
-        infoMsg.value = isEditMode.value ? 'Menu item edited.' : 'Menu item created.'
+        let res = await ApiService.createOrUpdateDishes(formData)
+        if (res.status === 200) {
+            resetUserForm()
+            v$.value.$reset()
+            infoMsg.value = isEditMode.value ? 'Menu item edited.' : 'Menu item created.'
+        }
     }
 }
 
