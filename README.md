@@ -28,4 +28,4 @@ npm run dev
 npm run build
 ```
 
-![Menu App](menu-app.png)
+![Menu-App](menu-app.png)
