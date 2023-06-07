@@ -6,11 +6,11 @@
         <div class="col-md-4 offset-md-4">
             <div class="card">
                 <div class="card-body">
-                    <div v-if="successMsg" class="alert alert-success" role="alert">
-                        {{ successMsg }}
+                    <div v-if="infoMsg" class="alert alert-success" role="alert">
+                        {{ infoMsg }}
                     </div>
 
-                    <form @submit.prevent="handleSubmit()" ref="formEl">
+                    <form @submit.prevent="handleSubmit()">
                         <div class="mb-3">
                             <label for="exampleFormControlInput1" class="form-label">Dish name</label>
                             <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Margarita Pizza" v-model="formData.name">
@@ -29,7 +29,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlInput6" class="form-label">Dish price</label>
-                            <input type="text" class="form-control" id="exampleFormControlInput6" placeholder="Dish price in $" v-model="formData.price">
+                            <input type="number" class="form-control" id="exampleFormControlInput6" placeholder="Dish price in $" v-model="formData.price">
                             <!-- Error Message -->
                             <div class="input-errors" v-for="(error, index) of v$.price.$errors" :key="index">
                                 <div class="text-danger">{{ error.$message }}</div>
@@ -79,7 +79,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="exampleFormControlInput4" class="form-label">Dish time to prepare</label>
-                            <input type="text" class="form-control" id="exampleFormControlInput4" placeholder="ETA 30min" v-model="formData.eta">
+                            <input type="number" class="form-control" id="exampleFormControlInput4" placeholder="ETA 30min" v-model="formData.eta">
                             <!-- Error Message -->
                             <div class="input-errors" v-for="(error, index) of v$.eta.$errors" :key="index">
                                 <div class="text-danger">{{ error.$message }}</div>
@@ -107,6 +107,7 @@ import { ref, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ApiService from "@/services/ApiService"
 
+// Variable section
 const initialFormData = () => ({
     name: '',
     description: '',
@@ -118,51 +119,47 @@ const initialFormData = () => ({
     active: false
 })
 
-const formData = reactive(initialFormData()),
-    resetUserForm = () => Object.assign(formData, initialFormData()),
+let formData = reactive(initialFormData())
+const resetUserForm = () => Object.assign(formData, initialFormData()),
     route = useRoute(),
     router = useRouter(),
-    successMsg = ref(''),
-    formEl = ref(null)
+    infoMsg = ref(''),
+    // Validation of the form fields
+    rules = computed(() => {
+        return {
+            name: { required, minLength: minLength(3), maxLength: maxLength(20) },
+            description: { required, minLength: minLength(5), maxLength: maxLength(200)},
+            price: { required, minLength: minLength(1), maxLength: maxLength(20) },
+            category: { required },
+            available: { required },
+            eta: { required,minLength: minLength(1), maxLength: maxLength(20) },
+            img: { required }
+        }
+    }),
+    v$ = useVuelidate(rules, formData)
 
-// Validation of the form fields
-const rules = computed(() => {
-    return {
-        name: { required, minLength: minLength(5), maxLength: maxLength(20) },
-        description: { required, minLength: minLength(5), maxLength: maxLength(200)},
-        price: { required, minLength: minLength(1), maxLength: maxLength(20) },
-        category: { required },
-        available: { required },
-        eta: { required,minLength: minLength(2), maxLength: maxLength(20) },
-        img: { required }
-    }
-})
-
-const v$ = useVuelidate(rules, formData)
-
-
+// Computed section
 // If we have ID we are able to edit
 const isEditMode = computed(() => {
   return route.params.id !== undefined
 })
 
-// Functions
-
+// Functions section
 // Function for handlig form and sending data to API
 const handleSubmit = async (event) => {
-    const result = await v$.value.$validate()
+    let result = await v$.value.$validate()
 
     if (result) {
         await ApiService.createOrUpdateDishes(formData)
         resetUserForm()
-        successMsg.value = isEditMode ? 'Menu item created.' : 'Menu item edited.'
+        v$.value.$reset()
+        infoMsg.value = isEditMode.value ? 'Menu item edited.' : 'Menu item created.'
     }
 }
 
 const getSingleDishesData = async () => {
     if (isEditMode.value) {
         let singleDish = await ApiService.getSingleDishes(route.params.id)
-        //formData = singleDish.data.data
         Object.assign(formData, singleDish.data.data)
     }
 }
@@ -170,12 +167,11 @@ const getSingleDishesData = async () => {
 const deleteSingleDishItem = async () => {
     let res = await ApiService.deleteSingleDishes(route.params.id)
 
-    if (res.message === 'Dish deleted' && res.status === 'OK') {
+    if (res.status === 200 && res.data.message === 'Dish deleted') {
         router.push({ name: 'home' });
     }
 }
 
-// Invocing functions
 getSingleDishesData()
 
 </script>

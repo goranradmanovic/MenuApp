@@ -5,7 +5,7 @@
                 <img src="@/assets/img/restaurant-menu.png" alt="Food menu image" width="30" height="24">
             </router-link>
             <router-link to="/" class="navbar-brand">Home</router-link>
-            <router-link to="/menu" class="navbar-brand">Menu</router-link>
+            <router-link to="/menu" class="navbar-brand">Menu Item<i class="bi bi-plus"></i></router-link>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>

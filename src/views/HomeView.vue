@@ -3,14 +3,13 @@
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="my-3">Menu Items</h1>
-
-                <button v-if="dishes.data.data.length" type="button" class="btn btn-warning clear-btn" @click="clearMenu()">Clear Menu</button>
+                <button v-if="dishes.length" type="button" class="btn btn-warning clear-btn" @click="clearMenu()">Clear Menu</button>
             </div>
         </div>
         <div class="col-md-6 offset-md-3">
             <ul v-if="isDishes" class="list-group list-group-flush">
-                <li v-for="item in dishes.data.data" :key="item._id" class="list-group-item">
-                    <div class="card mb-3">
+                <li v-for="item in dishes" :key="item._id" class="list-group-item">
+                    <div class="card mb-3" :class="{ 'bg-body-secondary': item.active }">
                         <div class="row g-0">
                             <div class="col-md-4">
                                 <img :src="getImageUrl(item.img)" class="img-fluid rounded-start m-2" alt="Food image">
@@ -37,6 +36,7 @@
                                     </h6>
                                     
                                     <p class="card-text"><small class="text-body-secondary">Estimated time to prepare {{ item.eta }} mins</small></p>
+                                    <p v-if="item.active" class="card-text"><small class="text-body-secondary text-uppercase fw-bold">Dish is out of menu</small></p>
                                 </div>
                             </div>
                         </div>
@@ -52,27 +52,34 @@
 import ApiService from "@/services/ApiService"
 import { ref, computed } from 'vue'
 
-const dishes = ref(null)
+const dishes = ref([])
 
-dishes.value = await ApiService.getAllDishes()
-
-// a computed ref
+// Computed check
 const isDishes = computed(() => {
-  return dishes.value.status === 200 && dishes.value.data.data.length > 0
+  return dishes.value.length > 0
 })
 
 // Clear menu items
 const clearMenu = async () => {
     let res = await ApiService.clearAllDishes()
-
-    if (res.status === 'OK') {
-        dishes.value = null
+    console.log(res.status)
+    if (res.status === 200) {
+        console.log('in', res)
+        dishes.value = []
     }
 }
 
 const getImageUrl = (imgName) => {
     return new URL(`/src/assets/img/${imgName}.svg`, import.meta.url).href;
 }
+
+const getAllMenuItems = async () => {
+    let res = await ApiService.getAllDishes()
+    dishes.value = res.data.data
+}
+
+getAllMenuItems()
+
 </script>
 
 <style scoped>
