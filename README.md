@@ -27,3 +27,5 @@ npm run dev
 ```sh
 npm run build
 ```
+
+![Menu App](menu-app.png)
