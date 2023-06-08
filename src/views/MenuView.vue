@@ -161,8 +161,11 @@ const handleSubmit = async (event) => {
 
 const getSingleDishesData = async () => {
     if (isEditMode.value) {
-        let singleDish = await ApiService.getSingleDishes(route.params.id)
-        Object.assign(formData, singleDish.data.data)
+        let res = await ApiService.getSingleDishes(route.params.id)
+
+        if (res.status === 200) {
+            Object.assign(formData, res.data.data)
+        }
     }
 }
 
